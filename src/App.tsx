@@ -1,46 +1,35 @@
 import React, { useState, useEffect } from 'react'
 import './App.css'
+import api from './api/api'
 type EstudanteType = {
   _id: string,
   nome: string,
   idade: number
 }
 function App() {
-  const token = localStorage.getItem("token")
   useEffect(() => {
-    fetch("/api/estudantes",{
-      headers:{
-        'Authorization': `Bearer ${token}`,
-      }
-    })
-      .then((response) => response.json())
-      .then((dados) => setEstudantes(dados))
+    api.get("/produtos")
+      .then((response) => setProdutos(response.data))
+      .catch((error)=>{console.log(error); alert("Error get data:"+error?.mensagem)})
   }, [])
-  const [estudantes, setEstudantes] = useState<EstudanteType[]>([])
-  const [nome, setNome] = useState("")
-  const [idade, setIdade] = useState(0)
+  const [produtos, setProdutos] = useState<ProdutoType[]>([])
 
-  function handleSubmit(e:React.FormEvent) {
-    e.preventDefault()
-    const estudante = { nome, idade }
-    fetch("/api/estudantes", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(estudante)
-    })
-      .then((response) => response.json())
-      .then((dados) => {
-        setEstudantes([...estudantes, dados])
-        setNome("")
-        setIdade(0)
-      })
+  function handleSubmit(event:React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const formData = new FormData(event.currentTarget)
+        const nome = formData.get("nome")
+        const preco = formData.get("preco")
+        const descricao = formData.get("descricao")
+        const urlfoto = formData.get("urlfoto")
+    const produto = {nome,preco,descricao,urlfoto}
+    api.post("/produtos",produto)
+    .then((response) => setProdutos([...produtos, response.data]))
+    .catch((error)=>{console.log(error); alert("Error post data:"+error?.mensagem)})
   }
 
   return (
     <>
-      <h1>Cadastro de Estudantes</h1>
+      <h1>Cadastro de Produtos</h1>
       <form onSubmit={handleSubmit}>
         <input type="text" placeholder='Nome' value={nome}
           onChange={(e) => setNome(e.target.value)} />
